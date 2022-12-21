@@ -31,13 +31,15 @@ last_hotkey := -1
 ; farm will not break but may lose a couple seconds every few minutes.
 ;
 ;================================
-;actions := [[2, 1100, 120000, -1], [3, 1100, 120000, -1], [1, 200, 50, -1]] ; hotbar, action cooldown time, last action time
-actions := [[1, 200, 50, -1]] ; hotbar, action cooldown time, last action time
+actions := [[2, 1100, 120000, -1], [3, 1100, 120000, -1], [1, 200, 50, -1]] ; hotbar, press time, cooldown time, last action time
+;actions := [[1, 200, 50, -1]] ; hotbar, press time, cooldown time, last action time
 
 throw_line()
 {
 	global actions
 	global last_hotkey
+
+	Sleep, 100 ; Need to sleep here because if there is no delay between catching a fish the cast can fail
 
 	For i, action in actions
 	{
