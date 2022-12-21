@@ -1,25 +1,59 @@
 ; Ian Harvey
 #MaxThreadsPerHotkey 3
 
-line_hotkey = 6
-red := 0x6969FF ;BGR
-white := 0xFFFFFF ;BGR
+;================================
+;
+; This is the bounding box around the fishing interface. It should be centered and almost touch
+; the end of the bar without including the white outline. You can use windows spy included with
+; the AHK download to find the coordinates of your window and fill them in below.
+;
+;================================
 y1 := 782
 x1 := 640
 y2 := 784
 x2 := 1300
 
+red := 0x6969FF ;BGR
+white := 0xFFFFFF ;BGR
 c_ranges := [[-1, red], [-1, white]] ; median, color
+last_hotkey := -1
+
+;================================
+;
+; Actions is an array of actions which are mapped to the hotbar with information about its pressing time,
+; cooldown time, and memory of last time pressed. When making your own for fishing, put the action for
+; casting the rod last so your bobber doesn't disappear. The first example is using bait buffs in slots 2 and 3
+; and then casting the rod on slot 1. The second example is just how to use the farm with only a rod.
+;
+; To start the farm start the script and use the hotkey Shift+`
+;
+; The script must be started with the first action hotbar item NOT selected. If you run out of buff items the
+; farm will not break but may lose a couple seconds every few minutes.
+;
+;================================
+;actions := [[2, 1100, 120000, -1], [3, 1100, 120000, -1], [1, 200, 50, -1]] ; hotbar, action cooldown time, last action time
+actions := [[1, 200, 50, -1]] ; hotbar, action cooldown time, last action time
 
 throw_line()
 {
-	Send, % line_hotkey
-	Sleep, 100
-	Send, % line_hotkey
-	Sleep, 100
-	Click, Down
-	Sleep, 200
-	Click, Up
+	global actions
+	global last_hotkey
+
+	For i, action in actions
+	{
+		if (A_TickCount - action[4] >= action[3]) ; if action off cooldown, perform action.
+		{
+			if (last_hotkey != action[1])
+			{
+				Send, % action[1]
+				last_hotkey := action[1]
+			}
+			Click, Down
+			Sleep, % action[2]
+			Click, Up
+			action[4] := A_TickCount
+		}
+	}
 }
 
 search_line_contains_color(x1, y1, x2, y2, color)
