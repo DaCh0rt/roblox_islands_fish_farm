@@ -20,7 +20,7 @@ blue := 0x27598E
 yellow := 0x8B901B
 purple := 0x8A3783
 fish_colors := [gray, green, blue, yellow, purple]
-fish_bar := [-1, ""] ; x median, unknown color
+fish_bar := [-1, "", -1, 3000] ; x median, unknown color, last found time, search delay
 red_bar := [-1, red] ; x median, color
 last_hotkey := -1
 hotbar_keys := 8
@@ -40,8 +40,8 @@ mouse_debug := 0
 ; If you run out of buff items the farm will not break but may lose a couple seconds every few minutes.
 ;
 ;================================
-actions := [[2, 1100, 120000, -1], [3, 1100, 120000, -1], [1, 200, 1, -1]] ; hotbar, press time, cooldown time, last action time
-;actions := [[1, 200, 1, -1]] ; hotbar, press time, cooldown time, last action time
+;actions := [[2, 1100, 120000, -1], [3, 1100, 120000, -1], [1, 200, 1, -1]] ; hotbar, press time, cooldown time, last action time
+actions := [[1, 200, 1, -1]] ; hotbar, press time, cooldown time, last action time
 
 throw_line()
 {
@@ -103,20 +103,33 @@ process_bars(x1, x2, y1)
 	PixelSearch, last_x,, x2, y1, x1, y1, color,, Fast RGB
 	red_bar[1] := ((last_x - first_x) // 2) + first_x
 	
-	for i, color in fish_colors
+	if (A_TickCount - fish_bar[3] >= fish_bar[4]) ; if have not checked fish color in search delay ms
 	{
-		if search_line_contains_color(x1, x2, y1, color)
+		for i, color in fish_colors
 		{
-			fish_bar[2] := color
-			break
+			if search_line_contains_color(x1, x2, y1, color)
+			{
+				fish_bar[2] := color
+				fish_bar[3] := A_TickCount
+				break
+			}
 		}
 	}
 	color := fish_bar[2]
 	PixelSearch, first_x,, x1, y1, x2, y1, color,, Fast RGB
 	PixelSearch, last_x,, x2, y1, x1, y1, color,, Fast RGB
-	if (((last_x - first_x) / 2) >= 1) ; If the red bar is covering a side of the fish box, just use old position
+	if ((last_x - first_x) > 1)
 	{
 		fish_bar[1] := ((last_x - first_x) // 2) + first_x
+	} else ; If the red bar is covering a side of the fish box, use red middle for box median
+	{
+		if (first_x > red_bar[1])
+		{
+			fish_bar[1] := ((first_x - red_bar[1]) // 2) + red_bar[1]
+		} else
+		{
+			fish_bar[1] := ((red_bar[1] - first_x) // 2) + first_x
+		}
 	}
 }
 
